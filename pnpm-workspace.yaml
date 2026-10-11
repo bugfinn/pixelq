@@ -1,0 +1,6 @@
+packages:
+  - api
+  - worker
+  - frontend
+  - scripts
+  - packages/*
