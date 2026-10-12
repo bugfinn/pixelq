@@ -4,3 +4,5 @@ packages:
   - frontend
   - scripts
   - packages/*
+allowBuilds:
+  esbuild: true
