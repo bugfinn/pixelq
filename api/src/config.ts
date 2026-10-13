@@ -1,3 +1,5 @@
+import { resolve } from "node:path";
+
 function readPort(value: string | undefined): number {
   const raw = value ?? "3000";
   const port = Number(raw);
@@ -34,4 +36,6 @@ export const config = {
   port: readPort(process.env.PORT),
   host: process.env.HOST ?? "0.0.0.0",
   databaseUrl: readDatabaseUrl(process.env.DATABASE_URL),
+  uploadDir: resolve(process.env.UPLOAD_DIR ?? "./data/uploads"),
+  maxUploadBytes: 10 * 1024 * 1024,
 };
