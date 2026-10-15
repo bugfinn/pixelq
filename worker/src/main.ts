@@ -4,6 +4,7 @@ import { config } from "./config.js";
 
 const IMAGE_QUEUE = "images";
 const SHUTDOWN_TIMEOUT_MS = 10_000;
+const DUPLICATE_SIGNAL_WINDOW_MS = 1_000;
 
 const connection = new Redis(config.redisUrl, { maxRetriesPerRequest: null });
 
@@ -35,14 +36,20 @@ worker.on("error", (err) => {
 
 console.log(`Worker is waiting for jobs on queue "${IMAGE_QUEUE}".`);
 
-let shuttingDown = false;
+let firstSignalAt = 0;
 
 async function shutdown(signal: string) {
-  if (shuttingDown) {
-    console.log("Second signal received, exiting now.");
-    process.exit(1);
+  const now = Date.now();
+
+  if (firstSignalAt !== 0) {
+    // Tools like "tsx watch" deliver one Ctrl+C twice, so ignore repeats in the first second.
+    if (now - firstSignalAt > DUPLICATE_SIGNAL_WINDOW_MS) {
+      console.log("Second signal received, exiting now.");
+      process.exit(1);
+    }
+    return;
   }
-  shuttingDown = true;
+  firstSignalAt = now;
 
   console.log(`${signal} received, finishing the current job and shutting down...`);
 
