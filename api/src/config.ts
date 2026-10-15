@@ -11,22 +11,20 @@ function readPort(value: string | undefined): number {
   return port;
 }
 
-function readDatabaseUrl(value: string | undefined): string {
+function readUrl(name: string, value: string | undefined, protocols: string[]): string {
   if (!value) {
-    throw new Error(
-      "DATABASE_URL is not set. Example: postgres://user:password@127.0.0.1:5432/dbname",
-    );
+    throw new Error(`${name} is not set.`);
   }
 
   let protocol: string;
   try {
     protocol = new URL(value).protocol;
   } catch {
-    throw new Error("DATABASE_URL is not a valid URL.");
+    throw new Error(`${name} is not a valid URL.`);
   }
 
-  if (protocol !== "postgres:" && protocol !== "postgresql:") {
-    throw new Error("DATABASE_URL must start with postgres:// or postgresql://");
+  if (!protocols.includes(protocol)) {
+    throw new Error(`${name} must start with ${protocols.map((p) => `${p}//`).join(" or ")}`);
   }
 
   return value;
@@ -35,7 +33,8 @@ function readDatabaseUrl(value: string | undefined): string {
 export const config = {
   port: readPort(process.env.PORT),
   host: process.env.HOST ?? "0.0.0.0",
-  databaseUrl: readDatabaseUrl(process.env.DATABASE_URL),
+  databaseUrl: readUrl("DATABASE_URL", process.env.DATABASE_URL, ["postgres:", "postgresql:"]),
+  redisUrl: readUrl("REDIS_URL", process.env.REDIS_URL, ["redis:", "rediss:"]),
   uploadDir: resolve(process.env.UPLOAD_DIR ?? "./data/uploads"),
   maxUploadBytes: 10 * 1024 * 1024,
 };

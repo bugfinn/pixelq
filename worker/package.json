@@ -7,13 +7,17 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "dev": "tsx watch --env-file=../.env src/main.ts",
     "test:watch": "vitest"
   },
   "dependencies": {
+    "bullmq": "^6.3.15",
+    "ioredis": "^6.0.0",
     "sharp": "^0.35.5"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",
+    "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vitest": "^5.0.4"
   }
