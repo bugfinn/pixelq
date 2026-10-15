@@ -3,6 +3,7 @@ import { Redis } from "ioredis";
 import { config } from "./config.js";
 
 const IMAGE_QUEUE = "images";
+const SHUTDOWN_TIMEOUT_MS = 10_000;
 
 const connection = new Redis(config.redisUrl, { maxRetriesPerRequest: null });
 
@@ -34,8 +35,22 @@ worker.on("error", (err) => {
 
 console.log(`Worker is waiting for jobs on queue "${IMAGE_QUEUE}".`);
 
+let shuttingDown = false;
+
 async function shutdown(signal: string) {
+  if (shuttingDown) {
+    console.log("Second signal received, exiting now.");
+    process.exit(1);
+  }
+  shuttingDown = true;
+
   console.log(`${signal} received, finishing the current job and shutting down...`);
+
+  setTimeout(() => {
+    console.log("Shutdown took too long, exiting now.");
+    process.exit(1);
+  }, SHUTDOWN_TIMEOUT_MS).unref();
+
   await worker.close();
   await connection.quit();
   process.exit(0);
