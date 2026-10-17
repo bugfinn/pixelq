@@ -10,6 +10,6 @@ try {
   console.error("Could not add the job:", err instanceof Error ? err.message : err);
   process.exitCode = 1;
 } finally {
-  await imageQueue.close().catch(() => {});
+  await imageQueue.close().catch(() => { });
   redis.disconnect();
 }
