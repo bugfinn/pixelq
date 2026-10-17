@@ -1,13 +1,30 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
 import { basename, join } from "node:path";
+import { and, eq, sql } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import { config } from "../config.js";
 import { db } from "../db.js";
 import { detectImageType } from "../file-type.js";
+import { enqueueImageJob } from "../queue.js";
 import { jobs } from "../schema.js";
 
 const extensions = { jpeg: "jpg", png: "png", webp: "webp" } as const;
+
+const RETENTION_HOURS = 24;
+const ENQUEUE_FAILED_MESSAGE =
+  "The processing queue was unavailable. Please upload the image again.";
+
+async function markEnqueueFailed(id: string) {
+  await db
+    .update(jobs)
+    .set({
+      status: "enqueue_failed",
+      error: ENQUEUE_FAILED_MESSAGE,
+      expiresAt: sql`now() + make_interval(hours => ${RETENTION_HOURS}::int)`,
+    })
+    .where(and(eq(jobs.id, id), eq(jobs.status, "queued")));
+}
 
 export async function jobRoutes(app: FastifyInstance) {
   app.post("/api/jobs", async (request, reply) => {
@@ -40,8 +57,27 @@ export async function jobRoutes(app: FastifyInstance) {
         storedPath,
       });
     } catch (err) {
-      await unlink(storedPath).catch(() => {});
+      await unlink(storedPath).catch(() => { });
       throw err;
+    }
+
+    try {
+      await enqueueImageJob(id);
+    } catch (err) {
+      request.log.error({ err, jobId: id }, "Could not add the job to the queue");
+
+      try {
+        await markEnqueueFailed(id);
+      } catch (markError) {
+        request.log.error(
+          { err: markError, jobId: id },
+          "Could not mark the job as enqueue_failed",
+        );
+      }
+
+      return reply
+        .code(503)
+        .send({ error: "The processing queue is unavailable. Please try again shortly." });
     }
 
     return reply.code(202).send({ id, status: "queued" });
