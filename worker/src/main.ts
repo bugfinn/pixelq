@@ -1,6 +1,10 @@
 import { Worker } from "bullmq";
 import { Redis } from "ioredis";
 import { config } from "./config.js";
+import { pool } from "./db.js";
+import { processImage } from "./image.js";
+import { jobStore } from "./jobs.js";
+import { processJob } from "./process-job.js";
 
 const IMAGE_QUEUE = "images";
 const SHUTDOWN_TIMEOUT_MS = 10_000;
@@ -16,8 +20,15 @@ const worker = new Worker(
   IMAGE_QUEUE,
   async (job) => {
     console.log(`Processing job ${job.id} (attempt ${job.attemptsMade + 1})`);
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    return { ok: true };
+
+    await processJob(
+      {
+        jobId: job.data?.jobId,
+        attemptNumber: job.attemptsMade + 1,
+        maxAttempts: job.opts.attempts ?? 1,
+      },
+      { store: jobStore, processImage, outputDir: config.outputDir },
+    );
   },
   { connection, concurrency: 1 },
 );
@@ -35,6 +46,7 @@ worker.on("error", (err) => {
 });
 
 console.log(`Worker is waiting for jobs on queue "${IMAGE_QUEUE}".`);
+console.log(`Writing outputs to ${config.outputDir}`);
 
 let firstSignalAt = 0;
 
@@ -59,6 +71,7 @@ async function shutdown(signal: string) {
   }, SHUTDOWN_TIMEOUT_MS).unref();
 
   await worker.close();
+  await pool.end();
   await connection.quit();
   process.exit(0);
 }

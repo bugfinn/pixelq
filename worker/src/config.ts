@@ -1,22 +1,26 @@
-function readRedisUrl(value: string | undefined): string {
+import { resolve } from "node:path";
+
+function readUrl(name: string, value: string | undefined, protocols: string[]): string {
   if (!value) {
-    throw new Error("REDIS_URL is not set. Example: redis://127.0.0.1:6379");
+    throw new Error(`${name} is not set.`);
   }
 
   let protocol: string;
   try {
     protocol = new URL(value).protocol;
   } catch {
-    throw new Error("REDIS_URL is not a valid URL.");
+    throw new Error(`${name} is not a valid URL.`);
   }
 
-  if (protocol !== "redis:" && protocol !== "rediss:") {
-    throw new Error("REDIS_URL must start with redis:// or rediss://");
+  if (!protocols.includes(protocol)) {
+    throw new Error(`${name} must start with ${protocols.map((p) => `${p}//`).join(" or ")}`);
   }
 
   return value;
 }
 
 export const config = {
-  redisUrl: readRedisUrl(process.env.REDIS_URL),
+  redisUrl: readUrl("REDIS_URL", process.env.REDIS_URL, ["redis:", "rediss:"]),
+  databaseUrl: readUrl("DATABASE_URL", process.env.DATABASE_URL, ["postgres:", "postgresql:"]),
+  outputDir: resolve(process.env.OUTPUT_DIR ?? "../data/outputs"),
 };

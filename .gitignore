@@ -150,3 +150,6 @@ vite.config.ts.timestamp-*
 
 # PixelQ local uploads
 api/data/
+
+# Local worker outputs
+data/

@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { enqueueImageJob, imageQueue, redis } from "./queue.js";
 
-const id = randomUUID();
+const id = process.argv[2] ?? randomUUID();
 
 try {
   await enqueueImageJob(id);
