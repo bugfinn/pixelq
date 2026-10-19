@@ -54,6 +54,7 @@ export async function jobRoutes(app: FastifyInstance) {
       await db.insert(jobs).values({
         id,
         originalName: basename(part.filename).slice(0, 255) || "upload",
+        originalSizeBytes: data.length,
         storedPath,
       });
     } catch (err) {

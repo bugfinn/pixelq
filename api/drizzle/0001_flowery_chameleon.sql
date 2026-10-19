@@ -1,0 +1,1 @@
+ALTER TABLE "jobs" ADD COLUMN "original_size_bytes" integer;

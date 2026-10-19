@@ -1,8 +1,11 @@
 import { buildApp } from "./app.js";
 import { config } from "./config.js";
+import { db } from "./db.js";
+import { createJobRepository } from "./job-repository.js";
 import { startQueueEvents } from "./queue-events.js";
+import { getQueueStats } from "./queue-stats.js";
 
-const app = buildApp();
+const app = buildApp({ repository: createJobRepository(db), queueStats: getQueueStats });
 const queueEvents = startQueueEvents(app.log);
 
 app.addHook("onClose", async () => {

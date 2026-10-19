@@ -8,6 +8,13 @@
       "when": 1791921230276,
       "tag": "0000_shallow_mindworm",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792435477846,
+      "tag": "0001_flowery_chameleon",
+      "breakpoints": true
     }
   ]
 }

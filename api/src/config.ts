@@ -35,6 +35,7 @@ export const config = {
   host: process.env.HOST ?? "0.0.0.0",
   databaseUrl: readUrl("DATABASE_URL", process.env.DATABASE_URL, ["postgres:", "postgresql:"]),
   redisUrl: readUrl("REDIS_URL", process.env.REDIS_URL, ["redis:", "rediss:"]),
-  uploadDir: resolve(process.env.UPLOAD_DIR ?? "./data/uploads"),
+  uploadDir: resolve(process.env.UPLOAD_DIR ?? "../data/uploads"),
+  outputDir: resolve(process.env.OUTPUT_DIR ?? "../data/outputs"),
   maxUploadBytes: 10 * 1024 * 1024,
 };

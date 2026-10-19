@@ -22,6 +22,7 @@ export const jobs = pgTable("jobs", {
   id: uuid("id").primaryKey().defaultRandom(),
   originalName: text("original_name").notNull(),
   storedPath: text("stored_path").notNull(),
+  originalSizeBytes: integer("original_size_bytes"),
   status: jobStatus("status").notNull().default("queued"),
   attempts: integer("attempts").notNull().default(0),
   error: text("error"),
