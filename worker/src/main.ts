@@ -4,6 +4,7 @@ import { config } from "./config.js";
 import { pool } from "./db.js";
 import { processImage } from "./image.js";
 import { jobStore } from "./jobs.js";
+import { startMaintenance } from "./maintenance/index.js";
 import { processJob } from "./process-job.js";
 
 const IMAGE_QUEUE = "images";
@@ -48,6 +49,11 @@ worker.on("error", (err) => {
 console.log(`Worker is waiting for jobs on queue "${IMAGE_QUEUE}".`);
 console.log(`Writing outputs to ${config.outputDir}`);
 
+const maintenancePromise = startMaintenance(connection).catch((err) => {
+  console.error("Could not start maintenance jobs:", err);
+  return null;
+});
+
 let firstSignalAt = 0;
 
 async function shutdown(signal: string) {
@@ -71,6 +77,7 @@ async function shutdown(signal: string) {
   }, SHUTDOWN_TIMEOUT_MS).unref();
 
   await worker.close();
+  await (await maintenancePromise)?.close();
   await pool.end();
   await connection.quit();
   process.exit(0);
