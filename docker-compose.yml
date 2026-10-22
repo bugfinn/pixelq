@@ -25,9 +25,65 @@ services:
       retries: 10
     restart: unless-stopped
 
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOST: 0.0.0.0
+      DATABASE_URL: postgres://pixelq:${POSTGRES_PASSWORD:-pixelq_dev}@postgres:5432/pixelq
+      REDIS_URL: redis://redis:6379
+      UPLOAD_DIR: /data/uploads
+      OUTPUT_DIR: /data/outputs
+    volumes:
+      - uploads:/data
+    networks: [backend]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/api/health').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: worker/Dockerfile
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://pixelq:${POSTGRES_PASSWORD:-pixelq_dev}@postgres:5432/pixelq
+      REDIS_URL: redis://redis:6379
+      UPLOAD_DIR: /data/uploads
+      OUTPUT_DIR: /data/outputs
+    volumes:
+      - uploads:/data
+    networks: [backend]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    stop_grace_period: 15s
+    restart: unless-stopped
+
 networks:
   backend:
     internal: true
 
 volumes:
   pgdata:
+  uploads:
