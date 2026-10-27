@@ -8,7 +8,5 @@
 *.md
 docker-compose*.yml
 docs
-frontend
-gateway
 scripts
 packages

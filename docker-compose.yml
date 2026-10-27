@@ -39,7 +39,7 @@ services:
       OUTPUT_DIR: /data/outputs
     volumes:
       - uploads:/data
-    networks: [backend]
+    networks: [backend, frontend]
     depends_on:
       postgres:
         condition: service_healthy
@@ -80,9 +80,36 @@ services:
     stop_grace_period: 15s
     restart: unless-stopped
 
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: [frontend]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/cache/nginx
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 128m
+    cpus: 0.5
+
 networks:
   backend:
     internal: true
+  frontend: {}
 
 volumes:
   pgdata:
