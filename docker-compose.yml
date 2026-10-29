@@ -103,6 +103,16 @@ services:
         condition: service_healthy
       api:
         condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "try{process.exit(Date.now()-require('fs').statSync('/tmp/heartbeat').mtimeMs<30000?0:1)}catch{process.exit(1)}"
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     stop_grace_period: 15s
     restart: unless-stopped
     read_only: true

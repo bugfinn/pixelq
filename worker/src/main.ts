@@ -6,6 +6,7 @@ import { processImage } from "./image.js";
 import { jobStore } from "./jobs.js";
 import { startMaintenance } from "./maintenance/index.js";
 import { processJob } from "./process-job.js";
+import { startHeartbeat } from "./heartbeat.js"
 
 const IMAGE_QUEUE = "images";
 const SHUTDOWN_TIMEOUT_MS = 10_000;
@@ -54,9 +55,12 @@ const maintenancePromise = startMaintenance(connection).catch((err) => {
   return null;
 });
 
+const heartbeat = startHeartbeat();
+
 let firstSignalAt = 0;
 
 async function shutdown(signal: string) {
+  heartbeat.stop();
   const now = Date.now();
 
   if (firstSignalAt !== 0) {
