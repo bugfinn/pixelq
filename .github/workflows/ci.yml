@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+env:
+  # Same project name as a local checkout, so compose finds the prebuilt
+  # images (pixelq-api, pixelq-worker, pixelq-gateway) instead of rebuilding.
+  COMPOSE_PROJECT_NAME: pixelq
+  COMPOSE_FILE: docker-compose.yml
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v7
+
+      - name: Set up Node (version from .nvmrc)
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+
+      - name: Enable Corepack (pnpm version comes from package.json)
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm -r --if-present run lint
+
+      - name: Typecheck
+        run: pnpm -r --if-present run typecheck
+
+      - name: Test
+        run: pnpm -r --if-present run test
+
+      - name: Build packages
+        run: pnpm -r --if-present run build
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build images (with layer cache)
+        uses: docker/bake-action@v7
+        with:
+          source: .
+          files: docker-compose.yml
+          load: true
+          set: |
+            api.tags=pixelq-api:latest
+            worker.tags=pixelq-worker:latest
+            gateway.tags=pixelq-gateway:latest
+            api.cache-from=type=gha,scope=pixelq-api
+            api.cache-to=type=gha,scope=pixelq-api,mode=max
+            worker.cache-from=type=gha,scope=pixelq-worker
+            worker.cache-to=type=gha,scope=pixelq-worker,mode=max
+            gateway.cache-from=type=gha,scope=pixelq-gateway
+            gateway.cache-to=type=gha,scope=pixelq-gateway,mode=max
+
+      - name: Scan images with Trivy
+        run: bash scripts/scan-images.sh
+
+      - name: Smoke test
+        run: bash scripts/smoke-test.sh
+
+      - name: Verify hardening
+        run: bash scripts/verify-hardening.sh
+
+      - name: Show container state and logs (on failure)
+        if: failure()
+        run: |
+          docker compose ps -a || true
+          docker compose logs --tail=100 || true
