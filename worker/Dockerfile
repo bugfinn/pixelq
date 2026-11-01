@@ -20,7 +20,19 @@ RUN pnpm --filter @pixelq/worker build \
 FROM node:${NODE_VERSION}-slim
 ENV NODE_ENV=production
 WORKDIR /app
-RUN mkdir -p /data/uploads /data/outputs && chown -R node:node /data
+
+# Temporary security fixes (found by Trivy in the base image):
+# - upgrade perl-base to the fixed Debian version; remove this when the Node
+#   base image ships it
+# - remove npm, which the worker never runs; its bundled packages (brace-expansion,
+#   ip-address, tar, undici) have fixable HIGH CVEs
+RUN apt-get update \
+ && apt-get install -y --only-upgrade --no-install-recommends perl-base \
+ && rm -rf /var/lib/apt/lists/* \
+ && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx \
+ && mkdir -p /data/uploads /data/outputs \
+ && chown -R node:node /data
+
 COPY --from=build --chown=node:node /out/package.json ./package.json
 COPY --from=build --chown=node:node /out/node_modules ./node_modules
 COPY --from=build --chown=node:node /out/dist ./dist
