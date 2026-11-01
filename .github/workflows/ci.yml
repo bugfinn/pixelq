@@ -22,6 +22,11 @@ jobs:
   ci:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    permissions:
+      contents: read
+      # Lets the job request a GitHub OIDC token. The AWS role only accepts
+      # tokens from pushes to main, so pull requests cannot use it.
+      id-token: write
     steps:
       - name: Check out the code
         uses: actions/checkout@v7
@@ -83,3 +88,28 @@ jobs:
         run: |
           docker compose ps -a || true
           docker compose logs --tail=100 || true
+
+      # Publishing: only for pushes to main, only after every check above passed,
+      # and only when the two repository variables exist.
+      - name: Configure AWS credentials (OIDC, no stored keys)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.AWS_ROLE_ARN != '' && vars.ECR_PUBLIC_ALIAS != ''
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Log in to Amazon ECR Public
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.AWS_ROLE_ARN != '' && vars.ECR_PUBLIC_ALIAS != ''
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry-type: public
+
+      - name: Push images to ECR Public (tagged with the commit SHA)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.AWS_ROLE_ARN != '' && vars.ECR_PUBLIC_ALIAS != ''
+        env:
+          REGISTRY: public.ecr.aws/${{ vars.ECR_PUBLIC_ALIAS }}
+        run: |
+          for NAME in api worker gateway; do
+            docker tag "pixelq-$NAME:latest" "$REGISTRY/pixelq-$NAME:$GITHUB_SHA"
+            docker push "$REGISTRY/pixelq-$NAME:$GITHUB_SHA"
+          done
