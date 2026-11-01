@@ -1,0 +1,26 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "GetTokens",
+      "Effect": "Allow",
+      "Action": [
+        "ecr-public:GetAuthorizationToken",
+        "sts:GetServiceBearerToken"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "PushToPixelqRepositories",
+      "Effect": "Allow",
+      "Action": [
+        "ecr-public:BatchCheckLayerAvailability",
+        "ecr-public:InitiateLayerUpload",
+        "ecr-public:UploadLayerPart",
+        "ecr-public:CompleteLayerUpload",
+        "ecr-public:PutImage"
+      ],
+      "Resource": "arn:aws:ecr-public::*:repository/pixelq-*"
+    }
+  ]
+}
