@@ -1,0 +1,6 @@
+# Benchmark only: publishes the API on localhost so the benchmark can upload
+# directly, without the gateway's upload rate limit. Never used by CI.
+services:
+  api:
+    ports:
+      - "127.0.0.1:3000:3000"
