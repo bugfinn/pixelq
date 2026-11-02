@@ -1,0 +1,7 @@
+# Demo-only settings for scripts/kill-demo.sh. CI and the smoke test never use this file.
+services:
+  worker:
+    environment:
+      WORKER_LOCK_DURATION_MS: "6000"
+      WORKER_STALLED_INTERVAL_MS: "3000"
+      DEMO_JOB_DELAY_MS: "20000"
