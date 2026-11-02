@@ -1,7 +1,9 @@
+import { setTimeout as sleep } from "node:timers/promises";
 import { Worker } from "bullmq";
 import { Redis } from "ioredis";
 import { config } from "./config.js";
 import { pool } from "./db.js";
+import { demoDelayMs } from "./demo-delay.js";
 import { processImage } from "./image.js";
 import { jobStore } from "./jobs.js";
 import { startMaintenance } from "./maintenance/index.js";
@@ -23,16 +25,33 @@ const worker = new Worker(
   async (job) => {
     console.log(`Processing job ${job.id} (attempt ${job.attemptsMade + 1})`);
 
+    const delayMs = demoDelayMs(job.attemptsStarted, config.demoJobDelayMs);
+
     await processJob(
       {
         jobId: job.data?.jobId,
         attemptNumber: job.attemptsMade + 1,
         maxAttempts: job.opts.attempts ?? 1,
       },
-      { store: jobStore, processImage, outputDir: config.outputDir },
+      {
+        store: jobStore,
+        processImage: async (inputPath, outputDir, jobId) => {
+          if (delayMs > 0) {
+            console.log(`DEMO: job ${job.id} waits ${delayMs} ms before processing`);
+            await sleep(delayMs);
+          }
+          return processImage(inputPath, outputDir, jobId);
+        },
+        outputDir: config.outputDir,
+      },
     );
   },
-  { connection, concurrency: 1 },
+  {
+    connection,
+    concurrency: 1,
+    lockDuration: config.lockDurationMs,
+    stalledInterval: config.stalledIntervalMs,
+  },
 );
 
 worker.on("completed", (job) => {
@@ -49,6 +68,9 @@ worker.on("error", (err) => {
 
 console.log(`Worker is waiting for jobs on queue "${IMAGE_QUEUE}".`);
 console.log(`Writing outputs to ${config.outputDir}`);
+console.log(
+  `Lock duration ${config.lockDurationMs} ms, stalled-job check every ${config.stalledIntervalMs} ms.`,
+);
 
 const maintenancePromise = startMaintenance(connection).catch((err) => {
   console.error("Could not start maintenance jobs:", err);
