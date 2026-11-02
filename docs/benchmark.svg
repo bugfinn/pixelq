@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 420" width="920" height="420" font-family="system-ui, sans-serif">
+<rect width="920" height="420" rx="8" fill="#ffffff"/>
+<text x="50" y="30" font-size="18" font-weight="bold" fill="#222">PixelQ scaling benchmark</text>
+<text x="50" y="50" font-size="12" fill="#555">60 generated JPEGs (1.9, 3.8 and 6 megapixels) per run, 4 CPU cores, 5.7 GiB RAM</text>
+<text x="50" y="70" font-size="15" font-weight="bold" fill="#222">Throughput (jobs per second)</text>
+<line x1="50" y1="330" x2="430" y2="330" stroke="#888"/>
+<rect x="69.0" y="270.6" width="84.7" height="59.4" fill="#2b7de9"/>
+<text x="111.3" y="264.6" font-size="12" text-anchor="middle" fill="#222">1.28</text>
+<text x="113.3" y="352" font-size="12" text-anchor="middle" fill="#222">1 worker</text>
+<rect x="195.7" y="214.1" width="84.7" height="115.9" fill="#2b7de9"/>
+<text x="238.0" y="208.1" font-size="12" text-anchor="middle" fill="#222">2.51</text>
+<text x="240.0" y="352" font-size="12" text-anchor="middle" fill="#222">2 workers</text>
+<rect x="322.3" y="155.0" width="84.7" height="175.0" fill="#2b7de9"/>
+<text x="364.7" y="149.0" font-size="12" text-anchor="middle" fill="#222">3.79</text>
+<text x="366.7" y="352" font-size="12" text-anchor="middle" fill="#222">4 workers</text>
+<text x="490" y="70" font-size="15" font-weight="bold" fill="#222">Latency, upload to done (seconds)</text>
+<rect x="490" y="92" width="12" height="12" fill="#2a9d8f"/>
+<text x="508" y="102" font-size="12" fill="#222">p50</text>
+<rect x="570" y="92" width="12" height="12" fill="#e76f51"/>
+<text x="588" y="102" font-size="12" fill="#222">p95</text>
+<line x1="490" y1="330" x2="870" y2="330" stroke="#888"/>
+<rect x="509.0" y="236.9" width="40.3" height="93.1" fill="#2a9d8f"/>
+<text x="529.2" y="230.9" font-size="12" text-anchor="middle" fill="#222">22.70</text>
+<rect x="553.3" y="155.0" width="40.3" height="175.0" fill="#e76f51"/>
+<text x="573.5" y="149.0" font-size="12" text-anchor="middle" fill="#222">42.65</text>
+<text x="553.3" y="352" font-size="12" text-anchor="middle" fill="#222">1 worker</text>
+<rect x="635.7" y="281.8" width="40.3" height="48.2" fill="#2a9d8f"/>
+<text x="655.8" y="275.8" font-size="12" text-anchor="middle" fill="#222">11.75</text>
+<rect x="680.0" y="242.3" width="40.3" height="87.7" fill="#e76f51"/>
+<text x="700.2" y="236.3" font-size="12" text-anchor="middle" fill="#222">21.37</text>
+<text x="680.0" y="352" font-size="12" text-anchor="middle" fill="#222">2 workers</text>
+<rect x="762.3" y="299.9" width="40.3" height="30.1" fill="#2a9d8f"/>
+<text x="782.5" y="293.9" font-size="12" text-anchor="middle" fill="#222">7.33</text>
+<rect x="806.7" y="277.1" width="40.3" height="52.9" fill="#e76f51"/>
+<text x="826.8" y="271.1" font-size="12" text-anchor="middle" fill="#222">12.90</text>
+<text x="806.7" y="352" font-size="12" text-anchor="middle" fill="#222">4 workers</text>
+<text x="50" y="405" font-size="11" fill="#555">Median of 3 run(s) per worker count. Uploads go straight to the API. Each worker is limited to 1 CPU and 512 MB.</text>
+</svg>
