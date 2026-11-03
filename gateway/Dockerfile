@@ -20,7 +20,7 @@ FROM nginxinc/nginx-unprivileged:${NGINX_VERSION}-alpine
 # then go back to the non-root user. Remove this block once the base image has
 # the fixed versions.
 USER root
-RUN apk upgrade --no-cache brotli-libs curl libcurl
+RUN apk upgrade --no-cache brotli-libs curl libcurl libexpat
 USER 101
 
 COPY gateway/default.conf /etc/nginx/conf.d/default.conf
