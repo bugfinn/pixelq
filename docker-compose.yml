@@ -133,7 +133,7 @@ services:
     depends_on:
       api:
         condition: service_healthy
-    networks: [frontend]
+    networks: [edge, frontend]
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
       interval: 10s
@@ -152,10 +152,16 @@ services:
     cpus: 0.5
 
 networks:
+  # backend: api, workers, redis and postgres. No route to the internet.
   backend:
     internal: true
-  frontend: {}
-
+  # frontend: gateway <-> api. Also internal, so the api cannot reach the internet.
+  frontend:
+    internal: true
+  # edge: only the gateway. Docker cannot publish a port from a container
+  # that is on internal networks only, so the gateway needs one ordinary network.
+  edge: {}
+  
 volumes:
   pgdata:
   uploads:

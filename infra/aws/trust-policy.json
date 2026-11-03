@@ -9,8 +9,13 @@
       "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
         "StringEquals": {
-          "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
-          "token.actions.githubusercontent.com:sub": "repo:bugfinn/pixelq:ref:refs/heads/main"
+          "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+        },
+        "StringLike": {
+          "token.actions.githubusercontent.com:sub": [
+            "repo:bugfinn/pixelq:ref:refs/heads/main",
+            "repo:bugfinn@188835179/pixelq@1414331488:ref:refs/heads/main"
+          ]
         }
       }
     }

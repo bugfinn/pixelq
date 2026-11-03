@@ -1,6 +1,12 @@
 # Benchmark only: publishes the API on localhost so the benchmark can upload
 # directly, without the gateway's upload rate limit. Never used by CI.
+# The api is on internal networks only, and Docker cannot publish a port from
+# a container that has no ordinary network, so the benchmark adds one.
 services:
   api:
     ports:
       - "127.0.0.1:3000:3000"
+    networks: [backend, frontend, bench]
+
+networks:
+  bench: {}

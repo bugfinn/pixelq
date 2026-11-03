@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
-# PixelQ hardening check: proves the security controls on the worker container(s)
+# PixelQ hardening check: proves the security controls on the worker and api containers
 # really work, instead of trusting the compose file. Exits 1 if any check fails.
 #
 # Start the stack first (docker compose up -d --wait).
-# Options (environment variables):
-#   WORKER_CONTAINERS  container names or ids to check instead of the compose
-#                      workers (used to test that this script can fail)
+# Run it against the base stack only. The dev overlay gives the api an ordinary
+# network on purpose, so with it these checks fail by design.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -91,6 +90,52 @@ fetch("https://example.com", { signal: AbortSignal.timeout(5000) })
     bad "the container runs as root: $USER_LINE"
   fi
 done
+
+API="${API_CONTAINER:-$(docker compose ps -q api || true)}"
+if [ -z "$API" ]; then
+  echo "No running api container. Start the stack first: docker compose up -d --wait" >&2
+  exit 1
+fi
+API_NAME="$(docker inspect -f '{{.Name}}' "$API")"
+echo
+echo "API container: ${API_NAME#/}"
+
+echo "1/2 No outbound internet"
+if docker exec "$API" node -e '
+const net = require("node:net");
+const s = net.connect({ host: "postgres", port: 5432, timeout: 5000 });
+s.on("connect", () => process.exit(0));
+s.on("timeout", () => process.exit(1));
+s.on("error", () => process.exit(1));
+' >/dev/null 2>&1; then
+  if OUT="$(docker exec "$API" node -e '
+fetch("https://example.com", { signal: AbortSignal.timeout(5000) })
+  .then(() => { console.log("reached the internet"); process.exit(42); })
+  .catch((e) => { console.log("blocked: " + (e.cause?.code ?? e.name)); });
+' 2>&1)"; then
+    pass "public site unreachable ($OUT); postgres is reachable on the internal network"
+  else
+    bad "the api can reach the public internet ($OUT)"
+  fi
+else
+  bad "control failed: the api cannot reach postgres:5432, so this check proves nothing"
+fi
+
+echo "2/2 Attached to internal networks only"
+NETS="$(docker inspect -f '{{range $n, $net := .NetworkSettings.Networks}}{{$n}} {{end}}' "$API")"
+OPEN=""
+for N in $NETS; do
+  if [ "$(docker network inspect -f '{{.Internal}}' "$N")" != "true" ]; then
+    OPEN="$OPEN $N"
+  fi
+done
+if [ -z "$NETS" ]; then
+  bad "could not read the networks of the api container"
+elif [ -z "$OPEN" ]; then
+  pass "networks: ${NETS% } (all internal)"
+else
+   bad "the api is attached to an ordinary network:$OPEN (running with the dev overlay? check with: COMPOSE_FILE=docker-compose.yml docker compose up -d --wait)"
+fi
 
 echo
 if [ "$FAILURES" -eq 0 ]; then
