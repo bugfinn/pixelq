@@ -1,10 +1,10 @@
-ARG NODE_VERSION=24.21
+ARG NODE_VERSION=26.13
 
 # ---- build stage: install, compile, and keep only production files ----
 FROM node:${NODE_VERSION}-slim AS build
 ENV CI=true \
     COREPACK_ENABLE_DOWNLOAD_PROMPT=0
-RUN corepack enable
+RUN npm install -g corepack@0.36.0 && corepack enable
 WORKDIR /repo
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
