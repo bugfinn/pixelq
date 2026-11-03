@@ -1,11 +1,11 @@
-ARG NODE_VERSION=24.21
+ARG NODE_VERSION=26.13
 ARG NGINX_VERSION=1.30
 
 # Stage 1: build the React page.
 FROM node:${NODE_VERSION}-slim AS build
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 WORKDIR /repo
-RUN corepack enable
+RUN npm install -g corepack@0.36.0 && corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY frontend/package.json frontend/
 RUN pnpm install --frozen-lockfile --filter frontend...
