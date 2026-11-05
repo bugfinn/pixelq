@@ -22,12 +22,13 @@ ENV NODE_ENV=production
 WORKDIR /app
 
 # Temporary security fixes (found by Trivy in the base image):
-# - upgrade perl-base to the fixed Debian version; remove this when the Node
+# - upgrade perl-base, apt and libapt-pkg7.0 to the fixed Debian versions; remove
+#   this when the Node
 #   base image ships it
 # - remove npm, which the worker never runs; its bundled packages (brace-expansion,
 #   ip-address, tar, undici) have fixable HIGH CVEs
 RUN apt-get update \
- && apt-get install -y --only-upgrade --no-install-recommends perl-base \
+ && apt-get install -y --only-upgrade --no-install-recommends perl-base apt libapt-pkg7.0 \
  && rm -rf /var/lib/apt/lists/* \
  && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx \
  && mkdir -p /data/uploads /data/outputs \
