@@ -104,7 +104,7 @@ These are not hidden gaps. They are choices made for version 1, or things that w
 
 - **Pinning level.** Base images are pinned to a version tag, and GitHub, Docker and AWS actions to a major tag. None is pinned to a digest or a commit SHA. SHA and digest pinning with Dependabot is a later step.
 - **Old OS updates can hide in the cache.** Cached build layers keep old `apt` and `apk` results until something earlier in the Dockerfile changes, so CI does not pick up new OS security updates by itself. A scheduled rebuild without cache would fix that, and it does not exist yet.
-- **Temporary fixes remain** in the Dockerfiles (the `perl-base` upgrade and the removal of npm for api and worker, and the upgrade of `brotli-libs`, `curl`, `libcurl` and `libexpat` in the gateway). They should be removed when the base images ship the fixed versions.
+- **Temporary fixes remain** in the Dockerfiles (the `perl-base`, `apt` and `libapt-pkg7.0` upgrade and the removal of npm for api and worker, and the upgrade of `brotli-libs`, `curl`, `libcurl`, `libexpat` and `zlib` in the gateway). They should be removed when the base images ship the fixed versions.
 - **The images on ECR Public are public**, and there is no automatic cleanup of old tags.
 
 ## How to check it yourself

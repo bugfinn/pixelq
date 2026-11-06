@@ -15,12 +15,12 @@ RUN pnpm --filter frontend build
 # Stage 2: Nginx with only the built files and the config. No Node, no source code.
 FROM nginxinc/nginx-unprivileged:${NGINX_VERSION}-alpine
 
-# Temporary: the base image still ships brotli-libs, curl and libcurl versions
+# Temporary: the base image still ships brotli-libs, curl, libcurl, libexpat and zlib versions
 # with fixable HIGH/CRITICAL CVEs (found by Trivy). Upgrade just these packages,
 # then go back to the non-root user. Remove this block once the base image has
 # the fixed versions.
 USER root
-RUN apk upgrade --no-cache brotli-libs curl libcurl libexpat
+RUN apk upgrade --no-cache brotli-libs curl libcurl libexpat zlib
 USER 101
 
 COPY gateway/default.conf /etc/nginx/conf.d/default.conf

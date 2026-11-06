@@ -215,6 +215,8 @@ docs/       architecture, threat model, measurements, benchmark chart, kill demo
 | `node scripts/benchmark.ts` | Scaling benchmark with 1, 2 and 4 workers |
 | `./scripts/kill-demo.sh` | Kills a worker in the middle of a job |
 
+**Before running the scripts:** the smoke test and the benchmark make their test images with sharp from `node_modules`, so run `pnpm install` once first (see Development below). Without it the smoke test stops with "could not create the test image". The quickstart itself does not need it.
+
 ### Development
 
 You need Node 26 (see `.nvmrc`) and pnpm. Node 26 does not include Corepack, so install it first:
